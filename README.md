@@ -57,3 +57,49 @@ server {
   }
 }
 ```
+### MAS
+***config.yaml***
+```yaml
+http:
+  listeners:
+  - name: web
+    resources:
+    - name: discovery
+    - name: human
+    - name: oauth
+    - name: compat
+    - name: graphql
+    - name: assets
+    binds:
+      # - address: '[::]:8080'
+      - host: 0.0.0.0
+        port: 8080
+    proxy_protocol: false
+  - name: internal
+    resources:
+    - name: health
+    binds:
+    - host: localhost
+      port: 8081
+    proxy_protocol: false
+  trusted_proxies:
+  - 192.168.0.0/16
+  - 172.16.0.0/12
+  - 10.0.0.0/10
+  - 127.0.0.1/8
+  - fd00::/8
+  - ::1/128
+  public_base: https://auth.example.com/
+  issuer: https://auth.example.com/
+...
+matrix:
+  kind: synapse
+  homeserver: matrix.sherlockwisdom.com
+  endpoint: https://matrix.sherlockwisdom.com/
+  secret: R8PHHknWdVHIsIgUODRuFcN9XYINtrNO
+account:
+  password_registration_enabled: true
+  password_recovery_enabled: true
+  account_deactivation_allowed: true
+  login_with_email_allowed: true
+```
