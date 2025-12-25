@@ -2,7 +2,7 @@
 
 ## Notes
 ### Postgres issues
-- [Cannot connect to Postgres database](https://github.com/matrix-org/synapse/issues/2780)
+- [Cannot connect to Postgres database](https://github.com/matrix-org/synapse/issues/2780#issuecomment-855285811))
 
 ### Configuration
 - [Setup](https://willlewis.co.uk/blog/posts/stronger-matrix-auth-mas-synapse-docker-compose/)
