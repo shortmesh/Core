@@ -226,20 +226,3 @@ func (c *Controller) AddDevice(username, platform string) (string, error) {
 
 	return websocketUrl, nil
 }
-
-func (c *Controller) AddWebhook(deviceName, url, method string) error {
-	clientDb := ClientDB{
-		username: c.Username,
-		filepath: "db/" + c.Username + ".db",
-	}
-	clientDb.Init()
-
-	err := clientDb.CreateWebhook(deviceName, url, method)
-	if err != nil {
-		return err
-	}
-
-	log.Println("Added webhook for", deviceName, url, method)
-
-	return nil
-}
