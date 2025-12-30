@@ -2,10 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"strings"
-	"time"
 
 	"maunium.net/go/mautrix"
 	"maunium.net/go/mautrix/event"
@@ -20,133 +17,133 @@ type Bridges struct {
 	Client     *mautrix.Client
 }
 
-func (b *Bridges) ProcessIncomingLoginDaemon(bridgeCfg *BridgeConfig) {
-	log.Println("Processing incoming login daemon for:", b.Name)
-	var clientDb = ClientDB{
-		username: b.Client.UserID.Localpart(),
-		filepath: "db/" + b.Client.UserID.Localpart() + ".db",
-	}
+// func (b *Bridges) ProcessIncomingLoginDaemon(bridgeCfg *BridgeConfig) {
+// 	log.Println("Processing incoming login daemon for:", b.Name)
+// 	var clientDb = ClientDB{
+// 		username: b.Client.UserID.Localpart(),
+// 		filepath: "db/" + b.Client.UserID.Localpart() + ".db",
+// 	}
 
-	if err := clientDb.Init(); err != nil {
-		log.Println("Error initializing client db:", err)
-		return
-	}
+// 	if err := clientDb.Init(); err != nil {
+// 		log.Println("Error initializing client db:", err)
+// 		return
+// 	}
 
-	eventSubName := ReverseAliasForEventSubscriber(b.Client.UserID.Localpart(), b.Name, cfg.HomeServerDomain) + "+loginDaemon"
-	eventSubscriber := EventSubscriber{
-		Name:    eventSubName,
-		MsgType: nil,
-		ExcludeMsgTypes: []event.MessageType{
-			event.MsgText,
-		},
-		RoomID: b.RoomID,
-		Callback: func(evt *event.Event) {
-			log.Println("Received event in login:", evt.RoomID, evt.Sender, evt.Timestamp, evt.Type)
-			if evt.Sender != b.Client.UserID && evt.Type == event.EventMessage {
-				failedCmd := bridgeCfg.Cmd["failed"]
+// 	eventSubName := ReverseAliasForEventSubscriber(b.Client.UserID.Localpart(), b.Name, cfg.HomeServerDomain) + "+loginDaemon"
+// 	eventSubscriber := EventSubscriber{
+// 		Name:    eventSubName,
+// 		MsgType: nil,
+// 		ExcludeMsgTypes: []event.MessageType{
+// 			event.MsgText,
+// 		},
+// 		RoomID: b.RoomID,
+// 		Callback: func(evt *event.Event) {
+// 			log.Println("Received event in login:", evt.RoomID, evt.Sender, evt.Timestamp, evt.Type)
+// 			if evt.Sender != b.Client.UserID && evt.Type == event.EventMessage {
+// 				failedCmd := bridgeCfg.Cmd["failed"]
 
-				matchesSuccess, err := cfg.CheckSuccessPattern(b.Name, evt.Content.AsMessage().Body)
+// 				matchesSuccess, err := cfg.CheckSuccessPattern(b.Name, evt.Content.AsMessage().Body)
 
-				if err != nil {
-					clientDb.RemoveActiveSessions(b.Client.UserID.Localpart())
-				}
+// 				if err != nil {
+// 					clientDb.RemoveActiveSessions(b.Client.UserID.Localpart())
+// 				}
 
-				if evt.Content.Raw["msgtype"] == "m.notice" {
-					if strings.Contains(evt.Content.AsMessage().Body, failedCmd) || matchesSuccess {
-						clientDb.RemoveActiveSessions(b.Client.UserID.Localpart())
-					}
-				}
+// 				if evt.Content.Raw["msgtype"] == "m.notice" {
+// 					if strings.Contains(evt.Content.AsMessage().Body, failedCmd) || matchesSuccess {
+// 						clientDb.RemoveActiveSessions(b.Client.UserID.Localpart())
+// 					}
+// 				}
 
-				if evt.Content.AsMessage().MsgType.IsMedia() {
-					url := evt.Content.AsMessage().URL
-					file, err := ParseImage(b.Client, string(url))
-					if err != nil {
-						log.Println("Error parsing image:", err)
-						clientDb.RemoveActiveSessions(b.Client.UserID.Localpart())
-					}
+// 				if evt.Content.AsMessage().MsgType.IsMedia() {
+// 					url := evt.Content.AsMessage().URL
+// 					file, err := ParseImage(b.Client, string(url))
+// 					if err != nil {
+// 						log.Println("Error parsing image:", err)
+// 						clientDb.RemoveActiveSessions(b.Client.UserID.Localpart())
+// 					}
 
-					// return file, nil
-					clientDb.StoreActiveSessions(b.Client.UserID.Localpart(), file)
-				}
-			}
+// 					// return file, nil
+// 					clientDb.StoreActiveSessions(b.Client.UserID.Localpart(), file)
+// 				}
+// 			}
 
-			// defer func() {
-			// 	for index, subscriber := range EventSubscribers {
-			// 		if subscriber.Name == eventSubName {
-			// 			EventSubscribers = append(EventSubscribers[:index], EventSubscribers[index+1:]...)
-			// 			break
-			// 		}
-			// 	}
-			// }()
-		},
-	}
-	EventSubscribers = append(EventSubscribers, eventSubscriber)
-}
+// 			// defer func() {
+// 			// 	for index, subscriber := range EventSubscribers {
+// 			// 		if subscriber.Name == eventSubName {
+// 			// 			EventSubscribers = append(EventSubscribers[:index], EventSubscribers[index+1:]...)
+// 			// 			break
+// 			// 		}
+// 			// 	}
+// 			// }()
+// 		},
+// 	}
+// 	EventSubscribers = append(EventSubscribers, eventSubscriber)
+// }
 
-func (b *Bridges) processIncomingLoginMessages(ch *chan []byte) {
-	since := time.Now().UTC().Add(-2 * time.Minute)
+// func (b *Bridges) processIncomingLoginMessages(ch *chan []byte) {
+// 	since := time.Now().UTC().Add(-2 * time.Minute)
 
-	var clientDb = ClientDB{
-		username: b.Client.UserID.Localpart(),
-		filepath: "db/" + b.Client.UserID.Localpart() + ".db",
-	}
+// 	var clientDb = ClientDB{
+// 		username: b.Client.UserID.Localpart(),
+// 		filepath: "db/" + b.Client.UserID.Localpart() + ".db",
+// 	}
 
-	if err := clientDb.Init(); err != nil {
-		log.Println("Error initializing client db:", err)
-		return
-	}
+// 	if err := clientDb.Init(); err != nil {
+// 		log.Println("Error initializing client db:", err)
+// 		return
+// 	}
 
-	eventSubName := ReverseAliasForEventSubscriber(b.Client.UserID.Localpart(), b.Name, cfg.HomeServerDomain) + "+login"
-	eventSubscriber := EventSubscriber{}
-	for _, subscriber := range EventSubscribers {
-		if subscriber.Name == eventSubName {
-			// eventSubscriber = subscriber
-			log.Println("Event subscriber already exists for:", eventSubName)
-			return
-		}
-	}
+// 	eventSubName := ReverseAliasForEventSubscriber(b.Client.UserID.Localpart(), b.Name, cfg.HomeServerDomain) + "+login"
+// 	eventSubscriber := EventSubscriber{}
+// 	for _, subscriber := range EventSubscribers {
+// 		if subscriber.Name == eventSubName {
+// 			// eventSubscriber = subscriber
+// 			log.Println("Event subscriber already exists for:", eventSubName)
+// 			return
+// 		}
+// 	}
 
-	noticeType := event.MsgNotice
-	eventSubscriber = EventSubscriber{
-		Name:    eventSubName,
-		MsgType: &noticeType,
-		Since:   &since,
-		RoomID:  b.RoomID,
-		Callback: func(evt *event.Event) {
-			log.Println("New notice for login", evt.RoomID, evt.Sender, evt.Timestamp, evt.Type)
-			if evt.Sender != b.Client.UserID && evt.Type == event.EventMessage {
-				matchesOngoing, err := cfg.CheckOngoingPattern(b.Name, evt.Content.AsMessage().Body)
+// 	noticeType := event.MsgNotice
+// 	eventSubscriber = EventSubscriber{
+// 		Name:    eventSubName,
+// 		MsgType: &noticeType,
+// 		Since:   &since,
+// 		RoomID:  b.RoomID,
+// 		Callback: func(evt *event.Event) {
+// 			log.Println("New notice for login", evt.RoomID, evt.Sender, evt.Timestamp, evt.Type)
+// 			if evt.Sender != b.Client.UserID && evt.Type == event.EventMessage {
+// 				matchesOngoing, err := cfg.CheckOngoingPattern(b.Name, evt.Content.AsMessage().Body)
 
-				if err != nil {
-					log.Println("Error checking ongoing pattern:", err)
-					*ch <- nil
-				}
+// 				if err != nil {
+// 					log.Println("Error checking ongoing pattern:", err)
+// 					*ch <- nil
+// 				}
 
-				if matchesOngoing {
-					time.Sleep(3 * time.Second)
-					sessions, _, err := clientDb.FetchActiveSessions(b.Client.UserID.Localpart())
-					if err != nil {
-						log.Println("Error fetching ongoing sessions:", err)
-						*ch <- nil
-					}
+// 				if matchesOngoing {
+// 					time.Sleep(3 * time.Second)
+// 					sessions, _, err := clientDb.FetchActiveSessions(b.Client.UserID.Localpart())
+// 					if err != nil {
+// 						log.Println("Error fetching ongoing sessions:", err)
+// 						*ch <- nil
+// 					}
 
-					*ch <- sessions
-				}
-			}
+// 					*ch <- sessions
+// 				}
+// 			}
 
-			// defer func() {
-			// 	for index, subscriber := range EventSubscribers {
-			// 		if subscriber.Name == eventSubName {
-			// 			EventSubscribers = append(EventSubscribers[:index], EventSubscribers[index+1:]...)
-			// 			break
-			// 		}
-			// 	}
-			// }()
-		},
-	}
-	EventSubscribers = append(EventSubscribers, eventSubscriber)
-	log.Println("Added event subscriber for:", eventSubscriber)
-}
+// 			// defer func() {
+// 			// 	for index, subscriber := range EventSubscribers {
+// 			// 		if subscriber.Name == eventSubName {
+// 			// 			EventSubscribers = append(EventSubscribers[:index], EventSubscribers[index+1:]...)
+// 			// 			break
+// 			// 		}
+// 			// 	}
+// 			// }()
+// 		},
+// 	}
+// 	EventSubscribers = append(EventSubscribers, eventSubscriber)
+// 	log.Println("Added event subscriber for:", eventSubscriber)
+// }
 
 func (b *Bridges) startNewSession(cmd string) error {
 	log.Printf("[+] %sBridge| Sending message %s to %v\n", b.Name, cmd, b.RoomID)
@@ -185,49 +182,49 @@ func (b *Bridges) checkActiveSessions() (bool, error) {
 	return true, nil
 }
 
-func (b *Bridges) AddDevice(ch *chan []byte) error {
-	log.Println("Getting configs for:", b.Name, b.RoomID)
-	bridgeCfg, ok := cfg.GetBridgeConfig(b.Name)
+// func (b *Bridges) AddDevice(ch *chan []byte) error {
+// 	log.Println("Getting configs for:", b.Name, b.RoomID)
+// 	bridgeCfg, ok := cfg.GetBridgeConfig(b.Name)
 
-	if !ok {
-		return fmt.Errorf("bridge config not found for: %s", b.Name)
-	}
+// 	if !ok {
+// 		return fmt.Errorf("bridge config not found for: %s", b.Name)
+// 	}
 
-	var clientDb = ClientDB{
-		username: b.Client.UserID.Localpart(),
-		filepath: "db/" + b.Client.UserID.Localpart() + ".db",
-	}
+// 	var clientDb = ClientDB{
+// 		username: b.Client.UserID.Localpart(),
+// 		filepath: "db/" + b.Client.UserID.Localpart() + ".db",
+// 	}
 
-	if err := clientDb.Init(); err != nil {
-		return err
-	}
+// 	if err := clientDb.Init(); err != nil {
+// 		return err
+// 	}
 
-	loginCmd, exists := bridgeCfg.Cmd["login"]
-	if !exists {
-		return fmt.Errorf("login command not found for: %s", b.Name)
-	}
+// 	loginCmd, exists := bridgeCfg.Cmd["login"]
+// 	if !exists {
+// 		return fmt.Errorf("login command not found for: %s", b.Name)
+// 	}
 
-	b.processIncomingLoginMessages(ch)
-	log.Println("Processed incoming login messages for:", b.Name)
+// 	b.processIncomingLoginMessages(ch)
+// 	log.Println("Processed incoming login messages for:", b.Name)
 
-	activeSessions, err := b.checkActiveSessions()
-	if err != nil {
-		log.Println("Failed checking active sessions", err)
-		return err
-	}
+// 	activeSessions, err := b.checkActiveSessions()
+// 	if err != nil {
+// 		log.Println("Failed checking active sessions", err)
+// 		return err
+// 	}
 
-	if !activeSessions {
-		log.Println("No active sessions found, removing active sessions")
-		clientDb.RemoveActiveSessions(b.Client.UserID.Localpart())
-		err := b.startNewSession(loginCmd)
-		if err != nil {
-			log.Println("Failed starting new session", err)
-			return err
-		}
-	}
+// 	if !activeSessions {
+// 		log.Println("No active sessions found, removing active sessions")
+// 		clientDb.RemoveActiveSessions(b.Client.UserID.Localpart())
+// 		err := b.startNewSession(loginCmd)
+// 		if err != nil {
+// 			log.Println("Failed starting new session", err)
+// 			return err
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (b *Bridges) JoinManagementRooms() error {
 	joinedRooms, err := b.Client.JoinedRooms(context.Background())
@@ -283,63 +280,63 @@ func (b *Bridges) JoinManagementRooms() error {
 	return nil
 }
 
-func (b *Bridges) ListDevices() ([]string, error) {
-	log.Println("Listing devices for:", b.Name, b.RoomID)
-	ch := make(chan []string)
-	eventSubName := ReverseAliasForEventSubscriber(b.Client.UserID.Localpart(), b.Name, cfg.HomeServerDomain) + "+devices"
-	eventType := event.MsgNotice
-	eventSince := time.Now().UTC()
-	eventSubscriber := EventSubscriber{
-		Name:    eventSubName,
-		MsgType: &eventType,
-		Since:   &eventSince,
-		RoomID:  b.RoomID,
-		Callback: func(event *event.Event) {
-			devicesRaw := strings.Split(event.Content.AsMessage().Body, "\n")
-			devices := make([]string, 0)
-			for _, device := range devicesRaw {
-				deviceName, err := ExtractBracketContent(device)
-				if err != nil {
-					log.Println("Failed extracting device name", err, device)
-					continue
-				}
-				devices = append(devices, deviceName)
-			}
-			ch <- devices
+// func (b *Bridges) ListDevices() ([]string, error) {
+// 	log.Println("Listing devices for:", b.Name, b.RoomID)
+// 	ch := make(chan []string)
+// 	eventSubName := ReverseAliasForEventSubscriber(b.Client.UserID.Localpart(), b.Name, cfg.HomeServerDomain) + "+devices"
+// 	eventType := event.MsgNotice
+// 	eventSince := time.Now().UTC()
+// 	eventSubscriber := EventSubscriber{
+// 		Name:    eventSubName,
+// 		MsgType: &eventType,
+// 		Since:   &eventSince,
+// 		RoomID:  b.RoomID,
+// 		Callback: func(event *event.Event) {
+// 			devicesRaw := strings.Split(event.Content.AsMessage().Body, "\n")
+// 			devices := make([]string, 0)
+// 			for _, device := range devicesRaw {
+// 				deviceName, err := ExtractBracketContent(device)
+// 				if err != nil {
+// 					log.Println("Failed extracting device name", err, device)
+// 					continue
+// 				}
+// 				devices = append(devices, deviceName)
+// 			}
+// 			ch <- devices
 
-			defer func() {
-				for index, subscriber := range EventSubscribers {
-					if subscriber.Name == eventSubName {
-						EventSubscribers = append(EventSubscribers[:index], EventSubscribers[index+1:]...)
-						break
-					}
-				}
-			}()
-		},
-	}
+// 			defer func() {
+// 				for index, subscriber := range EventSubscribers {
+// 					if subscriber.Name == eventSubName {
+// 						EventSubscribers = append(EventSubscribers[:index], EventSubscribers[index+1:]...)
+// 						break
+// 					}
+// 				}
+// 			}()
+// 		},
+// 	}
 
-	EventSubscribers = append(EventSubscribers, eventSubscriber)
+// 	EventSubscribers = append(EventSubscribers, eventSubscriber)
 
-	bridgeCfg, ok := cfg.GetBridgeConfig(b.Name)
-	if !ok {
-		return nil, fmt.Errorf("bridge config not found for: %s", b.Name)
-	}
-	log.Println("Event subscriber name:", eventSubName)
+// 	bridgeCfg, ok := cfg.GetBridgeConfig(b.Name)
+// 	if !ok {
+// 		return nil, fmt.Errorf("bridge config not found for: %s", b.Name)
+// 	}
+// 	log.Println("Event subscriber name:", eventSubName)
 
-	_, err := b.Client.SendText(
-		context.Background(),
-		b.RoomID,
-		bridgeCfg.Cmd["devices"],
-	)
+// 	_, err := b.Client.SendText(
+// 		context.Background(),
+// 		b.RoomID,
+// 		bridgeCfg.Cmd["devices"],
+// 	)
 
-	if err != nil {
-		return nil, err
-	}
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	devices := <-ch
+// 	devices := <-ch
 
-	return devices, nil
-}
+// 	return devices, nil
+// }
 
 func (b *Bridges) CreateContactRooms() error {
 	log.Println("Joining member rooms for:", b.Name)

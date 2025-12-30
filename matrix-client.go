@@ -5,12 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"sync"
-	"time"
 
 	"maunium.net/go/mautrix"
 	"maunium.net/go/mautrix/event"
-	"maunium.net/go/mautrix/id"
+	// "maunium.net/go/mautrix/id"
 )
 
 type SyncingClients struct {
@@ -27,99 +25,99 @@ type MatrixClient struct {
 	Client *mautrix.Client
 }
 
-type IncomingMessage struct {
-	RoomID  id.RoomID
-	Sender  id.UserID
-	Content event.Content
-}
+// type IncomingMessage struct {
+// 	RoomID  id.RoomID
+// 	Sender  id.UserID
+// 	Content event.Content
+// }
 
 /*
 This function adds the user to the database and joins the bridge rooms
 */
-func (m *MatrixClient) ProcessActiveSessions(
-	password string,
-) error {
-	log.Println("Processing active sessions for user:", m.Client.UserID.Localpart())
-	var clientDB ClientDB = ClientDB{
-		username: m.Client.UserID.Localpart(),
-		filepath: "db/" + m.Client.UserID.Localpart() + ".db",
-	}
-	clientDB.Init()
+// func (m *MatrixClient) ProcessActiveSessions(
+// 	password string,
+// ) error {
+// 	log.Println("Processing active sessions for user:", m.Client.UserID.Localpart())
+// 	var clientDB ClientDB = ClientDB{
+// 		username: m.Client.UserID.Localpart(),
+// 		filepath: "db/" + m.Client.UserID.Localpart() + ".db",
+// 	}
+// 	clientDB.Init()
 
-	if m.Client.AccessToken != "" && m.Client.UserID != "" && password != "" {
-		err := ks.CreateUser(m.Client.UserID.Localpart(), m.Client.AccessToken)
-		if err != nil {
-			return err
-		}
+// 	if m.Client.AccessToken != "" && m.Client.UserID != "" && password != "" {
+// 		err := ks.CreateUser(m.Client.UserID.Localpart(), m.Client.AccessToken)
+// 		if err != nil {
+// 			return err
+// 		}
 
-		err = clientDB.Store(m.Client.AccessToken, password)
+// 		err = clientDB.Store(m.Client.AccessToken, password)
 
-		if err != nil {
-			return err
-		}
-	}
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
 
-	for _, entry := range cfg.Bridges {
-		for name, config := range entry {
-			bridge := Bridges{
-				Name:    name,
-				Client:  m.Client,
-				BotName: config.BotName,
-			}
+// 	for _, entry := range cfg.Bridges {
+// 		for name, config := range entry {
+// 			bridge := Bridges{
+// 				Name:    name,
+// 				Client:  m.Client,
+// 				BotName: config.BotName,
+// 			}
 
-			err := bridge.JoinManagementRooms()
-			if err != nil {
-				return err
-			}
-		}
-	}
+// 			err := bridge.JoinManagementRooms()
+// 			if err != nil {
+// 				return err
+// 			}
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-func (m *MatrixClient) LoadActiveSessionsByAccessToken(accessToken string) (string, error) {
-	log.Println("Loading active sessions: ", m.Client.UserID.Localpart(), accessToken)
+// func (m *MatrixClient) LoadActiveSessionsByAccessToken(accessToken string) (string, error) {
+// 	log.Println("Loading active sessions: ", m.Client.UserID.Localpart(), accessToken)
 
-	var clientDB ClientDB = ClientDB{
-		username: m.Client.UserID.Localpart(),
-		filepath: "db/" + m.Client.UserID.Localpart() + ".db",
-	}
-	clientDB.Init()
-	exists, err := clientDB.AuthenticateAccessToken(m.Client.UserID.Localpart(), accessToken)
+// 	var clientDB ClientDB = ClientDB{
+// 		username: m.Client.UserID.Localpart(),
+// 		filepath: "db/" + m.Client.UserID.Localpart() + ".db",
+// 	}
+// 	clientDB.Init()
+// 	exists, err := clientDB.AuthenticateAccessToken(m.Client.UserID.Localpart(), accessToken)
 
-	if err != nil {
-		return "", err
-	}
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	if !exists {
-		return "", fmt.Errorf("access token does not exist")
-	}
+// 	if !exists {
+// 		return "", fmt.Errorf("access token does not exist")
+// 	}
 
-	return accessToken, nil
-}
+// 	return accessToken, nil
+// }
 
-func (m *MatrixClient) LoadActiveSessions(
-	password string,
-) (string, error) {
-	log.Println("Loading active sessions: ", m.Client.UserID.Localpart(), password)
+// func (m *MatrixClient) LoadActiveSessions(
+// 	password string,
+// ) (string, error) {
+// 	log.Println("Loading active sessions: ", m.Client.UserID.Localpart(), password)
 
-	var clientDB ClientDB = ClientDB{
-		username: m.Client.UserID.Localpart(),
-		filepath: "db/" + m.Client.UserID.Localpart() + ".db",
-	}
-	clientDB.Init()
-	exists, err := clientDB.Authenticate(m.Client.UserID.Localpart(), password)
+// 	var clientDB ClientDB = ClientDB{
+// 		username: m.Client.UserID.Localpart(),
+// 		filepath: "db/" + m.Client.UserID.Localpart() + ".db",
+// 	}
+// 	clientDB.Init()
+// 	exists, err := clientDB.Authenticate(m.Client.UserID.Localpart(), password)
 
-	if err != nil {
-		return "", err
-	}
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	if !exists {
-		return "", nil
-	}
+// 	if !exists {
+// 		return "", nil
+// 	}
 
-	return clientDB.Fetch()
-}
+// 	return clientDB.Fetch()
+// }
 
 func (m *MatrixClient) Login(password string) (string, error) {
 	log.Printf("Login in as %s\n", m.Client.UserID.String())
@@ -196,153 +194,153 @@ func (m *MatrixClient) Sync(ch chan *event.Event) error {
 	return nil
 }
 
-func (m *MatrixClient) SyncAllClients() error {
-	log.Println("Syncing all clients")
-	var wg sync.WaitGroup
+// func (m *MatrixClient) SyncAllClients() error {
+// 	log.Println("Syncing all clients")
+// 	var wg sync.WaitGroup
 
-	for {
-		users, err := ks.FetchAllUsers()
+// 	for {
+// 		users, err := ks.FetchAllUsers()
 
-		if err != nil {
-			return err
-		}
+// 		if err != nil {
+// 			return err
+// 		}
 
-		for _, user := range users {
-			if _, ok := syncingUsers[user.Username]; ok && len(syncingUsers[user.Username]) > 0 {
-				continue
-			} else {
-				syncingUsers[user.Username] = []string{}
-			}
+// 		for _, user := range users {
+// 			if _, ok := syncingUsers[user.Username]; ok && len(syncingUsers[user.Username]) > 0 {
+// 				continue
+// 			} else {
+// 				syncingUsers[user.Username] = []string{}
+// 			}
 
-			wg.Add(1)
+// 			wg.Add(1)
 
-			go func(user Users) {
-				err := m.syncClient(user) //blocking
-				if err != nil {
-					log.Println("Error syncing client:", err)
-					return
-				}
+// 			go func(user Users) {
+// 				err := m.syncClient(user) //blocking
+// 				if err != nil {
+// 					log.Println("Error syncing client:", err)
+// 					return
+// 				}
 
-			}(user)
-		}
+// 			}(user)
+// 		}
 
-		time.Sleep(3 * time.Second)
-	}
-}
+// 		time.Sleep(3 * time.Second)
+// 	}
+// }
 
-func (m *MatrixClient) syncClient(user Users) error {
-	homeServer := cfg.HomeServer
-	client, err := mautrix.NewClient(
-		homeServer,
-		id.NewUserID(user.Username, cfg.HomeServerDomain),
-		user.AccessToken,
-	)
-	mc := MatrixClient{
-		Client: client,
-	}
-	if err != nil {
-		log.Println("Error creating bridge for user:", err, user.Username)
-		return err
-	}
+// func (m *MatrixClient) syncClient(user Users) error {
+// 	homeServer := cfg.HomeServer
+// 	client, err := mautrix.NewClient(
+// 		homeServer,
+// 		id.NewUserID(user.Username, cfg.HomeServerDomain),
+// 		user.AccessToken,
+// 	)
+// 	mc := MatrixClient{
+// 		Client: client,
+// 	}
+// 	if err != nil {
+// 		log.Println("Error creating bridge for user:", err, user.Username)
+// 		return err
+// 	}
 
-	clientDb := ClientDB{
-		username: user.Username,
-		filepath: "db/" + user.Username + ".db",
-	}
+// 	clientDb := ClientDB{
+// 		username: user.Username,
+// 		filepath: "db/" + user.Username + ".db",
+// 	}
 
-	clientDb.Init()
-	bridges, err := clientDb.FetchBridgeRooms(user.Username)
-	if err != nil {
-		log.Println("Error fetching bridge rooms for user:", err, user.Username)
-		return err
-	}
+// 	clientDb.Init()
+// 	bridges, err := clientDb.FetchBridgeRooms(user.Username)
+// 	if err != nil {
+// 		log.Println("Error fetching bridge rooms for user:", err, user.Username)
+// 		return err
+// 	}
 
-	ch := make(chan *event.Event)
-	go func() {
-		for {
-			evt := <-ch
-			go m.processIncomingEvents(evt)
-		}
-	}()
+// 	ch := make(chan *event.Event)
+// 	go func() {
+// 		for {
+// 			evt := <-ch
+// 			go m.processIncomingEvents(evt)
+// 		}
+// 	}()
 
-	// insert bridge names into syncingUsers if not already present
-	go func() {
-		for _, bridge := range bridges {
-			bridge.Client = client
-			// bridge.Client.StateStore = mautrix.NewMemoryStateStore()
-			if _, ok := syncingUsers[user.Username]; !ok {
-				syncingUsers[user.Username] = []string{}
-			}
-			syncingUsers[user.Username] = append(syncingUsers[user.Username], bridge.Name)
-			if _, ok := ClientDevices[user.Username]; !ok {
-				ClientDevices[user.Username] = make(map[string][]string)
-			} else if _, ok := ClientDevices[user.Username][bridge.Name]; !ok {
-				ClientDevices[user.Username][bridge.Name] = make([]string, 0)
-			}
+// 	// insert bridge names into syncingUsers if not already present
+// 	go func() {
+// 		for _, bridge := range bridges {
+// 			bridge.Client = client
+// 			// bridge.Client.StateStore = mautrix.NewMemoryStateStore()
+// 			if _, ok := syncingUsers[user.Username]; !ok {
+// 				syncingUsers[user.Username] = []string{}
+// 			}
+// 			syncingUsers[user.Username] = append(syncingUsers[user.Username], bridge.Name)
+// 			if _, ok := ClientDevices[user.Username]; !ok {
+// 				ClientDevices[user.Username] = make(map[string][]string)
+// 			} else if _, ok := ClientDevices[user.Username][bridge.Name]; !ok {
+// 				ClientDevices[user.Username][bridge.Name] = make([]string, 0)
+// 			}
 
-			devices, err := bridge.ListDevices()
-			log.Println("Devices for bridge:", bridge.Name, devices)
+// 			devices, err := bridge.ListDevices()
+// 			log.Println("Devices for bridge:", bridge.Name, devices)
 
-			if err != nil {
-				log.Println("Error listing devices for user:", err, user.Username)
-				continue
-			}
-			ClientDevices[user.Username][bridge.Name] = devices
+// 			if err != nil {
+// 				log.Println("Error listing devices for user:", err, user.Username)
+// 				continue
+// 			}
+// 			ClientDevices[user.Username][bridge.Name] = devices
 
-			go func(bridge *Bridges) {
-				bridgeCfg, ok := cfg.GetBridgeConfig(bridge.Name)
-				if !ok {
-					log.Println("Bridge config not found for:", bridge.Name)
-					return
-				}
-				bridge.ProcessIncomingLoginDaemon(bridgeCfg)
-			}(bridge)
+// 			go func(bridge *Bridges) {
+// 				bridgeCfg, ok := cfg.GetBridgeConfig(bridge.Name)
+// 				if !ok {
+// 					log.Println("Bridge config not found for:", bridge.Name)
+// 					return
+// 				}
+// 				bridge.ProcessIncomingLoginDaemon(bridgeCfg)
+// 			}(bridge)
 
-			go func(bridge *Bridges) {
-				bridge.CreateContactRooms()
-				log.Println("Joined member rooms for bridge:", bridge.Name)
-				// wg.Done()
-			}(bridge)
+// 			go func(bridge *Bridges) {
+// 				bridge.CreateContactRooms()
+// 				log.Println("Joined member rooms for bridge:", bridge.Name)
+// 				// wg.Done()
+// 			}(bridge)
 
-			go func(bridge *Bridges) {
-				bridge.GetRoomInvitesDaemon()
-			}(bridge)
-		}
-	}()
+// 			go func(bridge *Bridges) {
+// 				bridge.GetRoomInvitesDaemon()
+// 			}(bridge)
+// 		}
+// 	}()
 
-	err = mc.Sync(ch)
+// 	err = mc.Sync(ch)
 
-	if err != nil {
-		log.Println("Sync error for user:", err, client.UserID.String())
-		return err
-	}
+// 	if err != nil {
+// 		log.Println("Sync error for user:", err, client.UserID.String())
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-func (m *MatrixClient) processIncomingEvents(evt *event.Event) error {
-	for _, subscriber := range EventSubscribers {
-		if len(subscriber.ExcludeMsgTypes) > 0 {
-			for _, excludeMsgType := range subscriber.ExcludeMsgTypes {
-				if excludeMsgType == evt.Content.AsMessage().MsgType {
-					continue
-				}
-			}
-		}
+// func (m *MatrixClient) processIncomingEvents(evt *event.Event) error {
+// 	for _, subscriber := range EventSubscribers {
+// 		if len(subscriber.ExcludeMsgTypes) > 0 {
+// 			for _, excludeMsgType := range subscriber.ExcludeMsgTypes {
+// 				if excludeMsgType == evt.Content.AsMessage().MsgType {
+// 					continue
+// 				}
+// 			}
+// 		}
 
-		if subscriber.MsgType == nil || *subscriber.MsgType == evt.Content.AsMessage().MsgType {
-			if subscriber.RoomID != "" && subscriber.RoomID != evt.RoomID {
-				continue
-			}
+// 		if subscriber.MsgType == nil || *subscriber.MsgType == evt.Content.AsMessage().MsgType {
+// 			if subscriber.RoomID != "" && subscriber.RoomID != evt.RoomID {
+// 				continue
+// 			}
 
-			if subscriber.Since != nil && evt.Timestamp <= subscriber.Since.UnixMilli() {
-				continue
-			}
+// 			if subscriber.Since != nil && evt.Timestamp <= subscriber.Since.UnixMilli() {
+// 				continue
+// 			}
 
-			subscriber.Callback(evt)
-		}
+// 			subscriber.Callback(evt)
+// 		}
 
-	}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

@@ -62,56 +62,56 @@ func (ks *Keystore) CreateUser(username string, accessToken string) error {
 	return nil
 }
 
-func (ks *Keystore) FetchUser(username string) (Users, error) {
-	stmt, err := ks.connection.Prepare("select id, username, accessToken from users where username = ?")
-	if err != nil {
-		return Users{}, err
-	}
+// func (ks *Keystore) FetchUser(username string) (Users, error) {
+// 	stmt, err := ks.connection.Prepare("select id, username, accessToken from users where username = ?")
+// 	if err != nil {
+// 		return Users{}, err
+// 	}
 
-	defer stmt.Close()
+// 	defer stmt.Close()
 
-	var id int
-	var _username string
-	var _accessToken string
-	err = stmt.QueryRow(username).Scan(&id, &_username, &_accessToken)
-	if err != nil {
-		return Users{}, err
-	}
+// 	var id int
+// 	var _username string
+// 	var _accessToken string
+// 	err = stmt.QueryRow(username).Scan(&id, &_username, &_accessToken)
+// 	if err != nil {
+// 		return Users{}, err
+// 	}
 
-	return Users{ID: id, Username: _username, AccessToken: _accessToken}, nil
-}
+// 	return Users{ID: id, Username: _username, AccessToken: _accessToken}, nil
+// }
 
-func (ks *Keystore) FetchAllUsers() ([]Users, error) {
-	stmt, err := ks.connection.Prepare("select id, username, accessToken from users")
-	if err != nil {
-		return []Users{}, err
-	}
+// func (ks *Keystore) FetchAllUsers() ([]Users, error) {
+// stmt, err := ks.connection.Prepare("select id, username, accessToken from users")
+// if err != nil {
+// 	return []Users{}, err
+// }
 
-	defer stmt.Close()
+// defer stmt.Close()
 
-	rows, err := stmt.Query()
-	if err != nil {
-		return []Users{}, err
-	}
+// rows, err := stmt.Query()
+// if err != nil {
+// 	return []Users{}, err
+// }
 
-	defer rows.Close()
+// defer rows.Close()
 
-	var users []Users
-	for rows.Next() {
-		var id int
-		var _username string
-		var _accessToken string
+// var users []Users
+// for rows.Next() {
+// 	var id int
+// 	var _username string
+// 	var _accessToken string
 
-		err = rows.Scan(&id, &_username, &_accessToken)
-		if err != nil {
-			return []Users{}, err
-		}
+// 	err = rows.Scan(&id, &_username, &_accessToken)
+// 	if err != nil {
+// 		return []Users{}, err
+// 	}
 
-		users = append(users, Users{ID: id, Username: _username, AccessToken: _accessToken})
-	}
+// 	users = append(users, Users{ID: id, Username: _username, AccessToken: _accessToken})
+// }
 
-	return users, nil
-}
+// return users, nil
+// }
 
 // https://github.com/mattn/go-sqlite3/blob/v1.14.28/_example/simple/simple.go
 func (clientDb *ClientDB) Init() error {
@@ -498,290 +498,4 @@ func IsActiveSessionsExpired(clientDb *ClientDB, username string) bool {
 
 	now := time.Now()
 	return now.After(sessionsTimestamp.Add(16 * time.Second))
-}
-
-// Webhook CRUD methods
-
-// CreateWebhook creates a new webhook entry
-func (clientDb *ClientDB) CreateWebhook(deviceName string, url string, method string) error {
-	tx, err := clientDb.connection.Begin()
-	if err != nil {
-		return err
-	}
-
-	stmt, err := tx.Prepare(`
-		INSERT OR REPLACE INTO webhooks (clientUsername, deviceName, url, method, timestamp) 
-		VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-	`)
-	if err != nil {
-		return err
-	}
-
-	defer stmt.Close()
-
-	_, err = stmt.Exec(clientDb.username, deviceName, url, method)
-	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed to create webhook: %w", err)
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
-	}
-
-	return nil
-}
-
-// FetchWebhook retrieves a webhook by device name, URL, and method
-func (clientDb *ClientDB) FetchWebhook(deviceName string, url string, method string) (Webhook, error) {
-	stmt, err := clientDb.connection.Prepare(`
-		SELECT id, clientUsername, deviceName, url, method, timestamp 
-		FROM webhooks 
-		WHERE clientUsername = ? AND deviceName = ? AND url = ? AND method = ?
-	`)
-	if err != nil {
-		return Webhook{}, err
-	}
-
-	defer stmt.Close()
-
-	var id int
-	var clientUsername string
-	var _deviceName string
-	var _url string
-	var _method string
-	var timestamp time.Time
-
-	err = stmt.QueryRow(clientDb.username, deviceName, url, method).Scan(&id, &clientUsername, &_deviceName, &_url, &_method, &timestamp)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return Webhook{}, nil
-		}
-		return Webhook{}, err
-	}
-
-	return Webhook{
-		ID:             id,
-		ClientUsername: clientUsername,
-		DeviceName:     _deviceName,
-		URL:            _url,
-		Method:         _method,
-	}, nil
-}
-
-// FetchWebhooksByDevice retrieves all webhooks for a specific device
-func (clientDb *ClientDB) FetchWebhooksByDevice(deviceName string) ([]Webhook, error) {
-	stmt, err := clientDb.connection.Prepare(`
-		SELECT id, clientUsername, deviceName, url, method, timestamp 
-		FROM webhooks 
-		WHERE clientUsername = ? AND deviceName = ?
-	`)
-	if err != nil {
-		return nil, err
-	}
-
-	defer stmt.Close()
-
-	rows, err := stmt.Query(clientDb.username, deviceName)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var webhooks []Webhook
-	for rows.Next() {
-		var id int
-		var clientUsername string
-		var _deviceName string
-		var url string
-		var method string
-		var timestamp time.Time
-
-		err = rows.Scan(&id, &clientUsername, &_deviceName, &url, &method, &timestamp)
-		if err != nil {
-			return nil, err
-		}
-
-		webhook := Webhook{
-			ID:             id,
-			ClientUsername: clientUsername,
-			DeviceName:     _deviceName,
-			URL:            url,
-			Method:         method,
-		}
-		webhooks = append(webhooks, webhook)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return webhooks, nil
-}
-
-// FetchAllWebhooks retrieves all webhooks for the current user
-func (clientDb *ClientDB) FetchAllWebhooks() ([]Webhook, error) {
-	stmt, err := clientDb.connection.Prepare(`
-		SELECT id, clientUsername, deviceName, url, method, timestamp 
-		FROM webhooks 
-		WHERE clientUsername = ?
-	`)
-	if err != nil {
-		return nil, err
-	}
-
-	defer stmt.Close()
-
-	rows, err := stmt.Query(clientDb.username)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var webhooks []Webhook
-	for rows.Next() {
-		var id int
-		var clientUsername string
-		var deviceName string
-		var url string
-		var method string
-		var timestamp time.Time
-
-		err = rows.Scan(&id, &clientUsername, &deviceName, &url, &method, &timestamp)
-		if err != nil {
-			return nil, err
-		}
-
-		webhook := Webhook{
-			ID:             id,
-			ClientUsername: clientUsername,
-			DeviceName:     deviceName,
-			URL:            url,
-			Method:         method,
-		}
-		webhooks = append(webhooks, webhook)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return webhooks, nil
-}
-
-// UpdateWebhook updates an existing webhook
-func (clientDb *ClientDB) UpdateWebhook(deviceName string, oldURL string, oldMethod string, newURL string, newMethod string) error {
-	tx, err := clientDb.connection.Begin()
-	if err != nil {
-		return err
-	}
-
-	stmt, err := tx.Prepare(`
-		UPDATE webhooks 
-		SET url = ?, method = ?, timestamp = CURRENT_TIMESTAMP 
-		WHERE clientUsername = ? AND deviceName = ? AND url = ? AND method = ?
-	`)
-	if err != nil {
-		return err
-	}
-
-	defer stmt.Close()
-
-	result, err := stmt.Exec(newURL, newMethod, clientDb.username, deviceName, oldURL, oldMethod)
-	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed to update webhook: %w", err)
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed to get rows affected: %w", err)
-	}
-
-	if rowsAffected == 0 {
-		tx.Rollback()
-		return fmt.Errorf("no webhook found to update")
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
-	}
-
-	return nil
-}
-
-// DeleteWebhook deletes a specific webhook
-func (clientDb *ClientDB) DeleteWebhook(deviceName string, url string, method string) error {
-	tx, err := clientDb.connection.Begin()
-	if err != nil {
-		return err
-	}
-
-	stmt, err := tx.Prepare(`
-		DELETE FROM webhooks 
-		WHERE clientUsername = ? AND deviceName = ? AND url = ? AND method = ?
-	`)
-	if err != nil {
-		return err
-	}
-
-	defer stmt.Close()
-
-	result, err := stmt.Exec(clientDb.username, deviceName, url, method)
-	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed to delete webhook: %w", err)
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed to get rows affected: %w", err)
-	}
-
-	if rowsAffected == 0 {
-		tx.Rollback()
-		return fmt.Errorf("no webhook found to delete")
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
-	}
-
-	return nil
-}
-
-// DeleteWebhooksByDevice deletes all webhooks for a specific device
-func (clientDb *ClientDB) DeleteWebhooksByDevice(deviceName string) error {
-	tx, err := clientDb.connection.Begin()
-	if err != nil {
-		return err
-	}
-
-	stmt, err := tx.Prepare(`
-		DELETE FROM webhooks 
-		WHERE clientUsername = ? AND deviceName = ?
-	`)
-	if err != nil {
-		return err
-	}
-
-	defer stmt.Close()
-
-	_, err = stmt.Exec(clientDb.username, deviceName)
-	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed to delete webhooks for device: %w", err)
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
-	}
-
-	return nil
 }

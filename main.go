@@ -8,10 +8,10 @@ import (
 func main() {
 	ks.Init()
 
-	go func() {
-		err := (&MatrixClient{}).SyncAllClients()
-		if err != nil {
-			panic(err)
-		}
-	}()
+	// go func() {
+	// 	err := (&MatrixClient{}).SyncAllClients()
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// }()
 }
