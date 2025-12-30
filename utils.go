@@ -43,6 +43,7 @@ type Conf struct {
 	HomeServerDomain string                    `yaml:"homeserver_domain"`
 	Bridges          []map[string]BridgeConfig `yaml:"bridges"`
 	User             User                      `yaml:"user"`
+	PickleKey        string                    `yaml:"pickle_key"`
 }
 
 func (c *Conf) getConf() (*Conf, error) {

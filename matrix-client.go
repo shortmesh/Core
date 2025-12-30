@@ -183,8 +183,6 @@ func (m *MatrixClient) Create(username string, password string) (string, error) 
 	return resp.AccessToken, nil
 }
 
-const pickleKeyString = "NnSHJguDSW7vtSshQJh2Yny4zQHc6Wyf"
-
 func verifyWithRecoveryKey(machine *crypto.OlmMachine, recoveryKey string) (err error) {
 	ctx := context.Background()
 
@@ -212,6 +210,9 @@ func verifyWithRecoveryKey(machine *crypto.OlmMachine, recoveryKey string) (err 
 
 func setupCryptoHelper(cli *mautrix.Client) (*cryptohelper.CryptoHelper, error) {
 	// remember to use a secure key for the pickle key in production
+
+	conf, err := cfg.getConf()
+	pickleKeyString := conf.PickleKey
 	pickleKey := []byte(pickleKeyString)
 
 	// this is a path to the SQLite database you will use to store various data about your bot

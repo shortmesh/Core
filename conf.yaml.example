@@ -1,6 +1,7 @@
 homeserver: "https://relaysms.me"
 homeserver_domain: "relaysms.me"
 keystore_filepath: "db/users.db"
+pickle_key: ""
 user:
   username: ""
   password: ""
