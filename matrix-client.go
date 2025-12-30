@@ -5,10 +5,12 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"sync"
 
 	"maunium.net/go/mautrix"
+	"maunium.net/go/mautrix/crypto"
+	"maunium.net/go/mautrix/crypto/cryptohelper"
 	"maunium.net/go/mautrix/event"
-	// "maunium.net/go/mautrix/id"
 )
 
 type SyncingClients struct {
@@ -120,22 +122,24 @@ This function adds the user to the database and joins the bridge rooms
 // }
 
 func (m *MatrixClient) Login(password string) (string, error) {
-	log.Printf("Login in as %s\n", m.Client.UserID.String())
-
 	identifier := mautrix.UserIdentifier{
-		Type: "m.id.user",
+		Type: mautrix.IdentifierTypeUser,
 		User: m.Client.UserID.String(),
 	}
 
 	resp, err := m.Client.Login(context.Background(), &mautrix.ReqLogin{
-		Type:       "m.login.password",
-		Identifier: identifier,
-		Password:   password,
+		Type:             mautrix.AuthTypePassword,
+		Identifier:       identifier,
+		Password:         password,
+		StoreCredentials: true,
 	})
 	if err != nil {
 		return "", err
 	}
 	m.Client.AccessToken = resp.AccessToken
+
+	fmt.Printf("[+] DeviceID: %s\n", resp.DeviceID)
+	fmt.Printf("[+] AccessToken: %s\n", resp.AccessToken)
 
 	return resp.AccessToken, nil
 }
@@ -179,17 +183,107 @@ func (m *MatrixClient) Create(username string, password string) (string, error) 
 	return resp.AccessToken, nil
 }
 
-func (m *MatrixClient) Sync(ch chan *event.Event) error {
+const pickleKeyString = "NnSHJguDSW7vtSshQJh2Yny4zQHc6Wyf"
+
+func verifyWithRecoveryKey(machine *crypto.OlmMachine, recoveryKey string) (err error) {
+	ctx := context.Background()
+
+	keyId, keyData, err := machine.SSSS.GetDefaultKeyData(ctx)
+	if err != nil {
+		return
+	}
+	key, err := keyData.VerifyRecoveryKey(keyId, recoveryKey)
+	if err != nil {
+		return
+	}
+	err = machine.FetchCrossSigningKeysFromSSSS(ctx, key)
+	if err != nil {
+		return
+	}
+
+	err = machine.SignOwnDevice(ctx, machine.OwnIdentity())
+	if err != nil {
+		return
+	}
+	err = machine.SignOwnMasterKey(ctx)
+
+	return
+}
+
+func setupCryptoHelper(cli *mautrix.Client) (*cryptohelper.CryptoHelper, error) {
+	// remember to use a secure key for the pickle key in production
+	pickleKey := []byte(pickleKeyString)
+
+	// this is a path to the SQLite database you will use to store various data about your bot
+	dbPath := "db/crypto.db"
+
+	helper, err := cryptohelper.NewCryptoHelper(cli, pickleKey, dbPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// initialize the database and other stuff
+	err = helper.Init(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	return helper, nil
+}
+
+func (m *MatrixClient) Sync(ch chan *event.Event, recoveryKey string) error {
 	syncer := mautrix.NewDefaultSyncer()
 	m.Client.Syncer = syncer
 
-	// syncer.OnEvent(func(ctx context.Context, evt *event.Event) {
-	syncer.OnEventType(event.EventMessage, func(ctx context.Context, evt *event.Event) {
+	cryptoHelper, err := setupCryptoHelper(m.Client)
+
+	if err != nil {
+		panic(err)
+	}
+
+	m.Client.Crypto = cryptoHelper
+
+	fmt.Printf("[+] DeviceID: %s\n", m.Client.DeviceID)
+
+	syncer.OnEventType(event.EventEncrypted, func(ctx context.Context, evt *event.Event) {
+		evt, err = m.Client.Crypto.Decrypt(ctx, evt)
+		if err != nil {
+			panic(err)
+		}
 		ch <- evt
 	})
 
-	if err := m.Client.Sync(); err != nil {
-		return err
+	// syncer.OnEvent(func(ctx context.Context, evt *event.Event) {
+	// 	fmt.Printf("%s\n", evt.Type)
+	// })
+
+	readyChan := make(chan bool)
+	var once sync.Once
+	syncer.OnSync(func(ctx context.Context, resp *mautrix.RespSync, since string) bool {
+		once.Do(func() {
+			close(readyChan)
+		})
+
+		return true
+	})
+
+	go func() {
+		if err := m.Client.Sync(); err != nil {
+			panic(err)
+		}
+	}()
+
+	log.Println("Waiting for sync to receive first event from the encrypted room...")
+	<-readyChan
+	log.Println("Sync received")
+
+	if m.Client.DeviceID != cryptoHelper.Machine().OwnIdentity().DeviceID {
+		panic("Mismatch in device IDs")
+	}
+
+	err = verifyWithRecoveryKey(cryptoHelper.Machine(), recoveryKey)
+	if err != nil {
+		panic(err)
 	}
 	return nil
 }

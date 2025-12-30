@@ -62,24 +62,24 @@ func (ks *Keystore) CreateUser(username string, accessToken string) error {
 	return nil
 }
 
-// func (ks *Keystore) FetchUser(username string) (Users, error) {
-// 	stmt, err := ks.connection.Prepare("select id, username, accessToken from users where username = ?")
-// 	if err != nil {
-// 		return Users{}, err
-// 	}
+func (ks *Keystore) FetchUser(username string) (User, error) {
+	stmt, err := ks.connection.Prepare("select id, username, accessToken from users where username = ?")
+	if err != nil {
+		return User{}, err
+	}
 
-// 	defer stmt.Close()
+	defer stmt.Close()
 
-// 	var id int
-// 	var _username string
-// 	var _accessToken string
-// 	err = stmt.QueryRow(username).Scan(&id, &_username, &_accessToken)
-// 	if err != nil {
-// 		return Users{}, err
-// 	}
+	var id int
+	var _username string
+	var _accessToken string
+	err = stmt.QueryRow(username).Scan(&id, &_username, &_accessToken)
+	if err != nil {
+		return User{}, err
+	}
 
-// 	return Users{ID: id, Username: _username, AccessToken: _accessToken}, nil
-// }
+	return User{Username: _username, AccessToken: _accessToken}, nil
+}
 
 // func (ks *Keystore) FetchAllUsers() ([]Users, error) {
 // stmt, err := ks.connection.Prepare("select id, username, accessToken from users")

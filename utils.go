@@ -35,12 +35,6 @@ type Server struct {
 	Tls  Tls    `yaml:"tls"`
 }
 
-type User struct {
-	Username    string `yaml:"username"`
-	Password    string `yaml:"password"`
-	AccessToken string `yaml:"access_token"`
-}
-
 type Conf struct {
 	Server           Server                    `yaml:"server"`
 	Websocket        ServerWebsocket           `yaml:"websocket"`

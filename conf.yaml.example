@@ -4,7 +4,10 @@ keystore_filepath: "db/users.db"
 user:
   username: ""
   password: ""
+  # manually fill all this if you don't have them - login
   access_token: ""
+  recovery_key: ""
+  device_id: ""
 websocket:
   port: 8090
   host: "0.0.0.0"
