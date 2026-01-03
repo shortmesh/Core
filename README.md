@@ -4,13 +4,13 @@
 
 - [Schemas](https://github.com/shortmesh/Core/blob/master/README.md#schemas)
 
-- [Notes](https://github.com/shortmesh/Core/edit/master/README.md#snaypse)
+- [Notes](https://github.com/shortmesh/Core/blob/master/README.md#notes)
 
-    - [Postgress issues](https://github.com/shortmesh/Core/edit/master/README.md#postgres-issues)
+    - [Postgress issues](https://github.com/shortmesh/Core/blob/master/README.md#postgres-issues)
     
-    - [Synapse](https://github.com/shortmesh/Core/edit/master/README.md#snaypse)
+    - [Synapse](https://github.com/shortmesh/Core/blob/master/README.md#snaypse)
     
-    - [MAS](https://github.com/shortmesh/Core/edit/master/README.md#mas)
+    - [MAS](https://github.com/shortmesh/Core/blob/master/README.md#mas)
  
 ## Schemas
 ```
