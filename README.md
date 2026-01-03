@@ -2,6 +2,8 @@
 
 ## Contents
 
+- [Schemas](https://github.com/shortmesh/Core/blob/master/README.md#schemas)
+
 - [Notes](https://github.com/shortmesh/Core/edit/master/README.md#snaypse)
 
     - [Postgress issues](https://github.com/shortmesh/Core/edit/master/README.md#postgres-issues)
