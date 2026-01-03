@@ -1,11 +1,41 @@
 # ShortMesh core
 
+## Contents
+
+- [Notes](https://github.com/shortmesh/Core/edit/master/README.md#snaypse)
+
+    - [Postgress issues](https://github.com/shortmesh/Core/edit/master/README.md#postgres-issues)
+    
+    - [- Synapse](https://github.com/shortmesh/Core/edit/master/README.md#snaypse)
+    
+    - [- MAS](https://github.com/shortmesh/Core/edit/master/README.md#mas)
+ 
+## Schemas
+```
+Users
+____
+user_name string ""
+
+access_token string ""
+
+```
+
+```
+Rooms
+────
+room_id string ""
+
+room_type enum direct | management | group
+
+is_encrypted boolean # True is bridge is encrypted
+
+bridge_name string # The actual name is exposed to the bridge; mostly used to ID groups 
+
+```
+
 ## Notes
 ### Postgres issues
 - [Cannot connect to Postgres database](https://github.com/matrix-org/synapse/issues/2780#issuecomment-855285811))
-
-### Configuration
-- [Setup](https://willlewis.co.uk/blog/posts/stronger-matrix-auth-mas-synapse-docker-compose/)
 
 ### Snaypse
 ```nginx
@@ -58,7 +88,10 @@ server {
 }
 ```
 ### MAS
-***config.yaml***
+**configuration**
+- [Setup](https://willlewis.co.uk/blog/posts/stronger-matrix-auth-mas-synapse-docker-compose/)
+
+**config.yaml**
 ```yaml
 http:
   listeners:
