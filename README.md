@@ -49,11 +49,11 @@ server {
 ```json
 {
   "m.homeserver": {
-    "base_url": "https://matrix.sherlockwisdom.com"
+    "base_url": "https://matrix.example.com"
   },
   "org.matrix.msc2965.authentication": {
-    "issuer": "https://auth.sherlockwisdom.com/",
-    "account": "https://auth.sherlockwisdom.com/account/"
+    "issuer": "https://auth.example.com/",
+    "account": "https://auth.example.com/account/"
   }
 }
 ```
@@ -94,7 +94,7 @@ http:
 ...
 matrix:
   kind: synapse
-  homeserver: matrix.sherlockwisdom.com
+  homeserver: matrix.example.com
   endpoint: https://matrix.sherlockwisdom.com/
   secret: R8PHHknWdVHIsIgUODRuFcN9XYINtrNO
 account:
