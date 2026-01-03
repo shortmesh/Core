@@ -6,9 +6,9 @@
 
     - [Postgress issues](https://github.com/shortmesh/Core/edit/master/README.md#postgres-issues)
     
-    - [- Synapse](https://github.com/shortmesh/Core/edit/master/README.md#snaypse)
+    - [Synapse](https://github.com/shortmesh/Core/edit/master/README.md#snaypse)
     
-    - [- MAS](https://github.com/shortmesh/Core/edit/master/README.md#mas)
+    - [MAS](https://github.com/shortmesh/Core/edit/master/README.md#mas)
  
 ## Schemas
 ```
@@ -43,8 +43,8 @@ server {
     listen 443 ssl http2;
     server_name matrix.example.com;
 
-    ssl_certificate /etc/letsencrypt/live/matrix.sherlockwisdom.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/matrix.sherlockwisdom.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/matrix.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/matrix.example.com/privkey.pem;
 
     client_max_body_size 50M;
 
